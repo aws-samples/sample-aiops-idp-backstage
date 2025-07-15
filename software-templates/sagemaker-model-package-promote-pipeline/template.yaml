@@ -1,0 +1,134 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: sagemaker-model-package-promote-pipeline
+  title: SageMaker model package promote pipeline
+  description: Create a SageMaker model package promote pipeline using SeedFarmer
+spec:
+  owner: user:guest
+  type: service
+
+  parameters:
+    - title: Basic Information
+      required:
+        - name
+        - awsAccountId
+        - adminRoleArn
+        - action
+      properties:
+        name:
+          title: Component Name
+          type: string
+          description: Name for your component
+          ui:autofocus: true
+        awsAccountId:
+          title: AWS Account ID
+          type: string
+          description: Your AWS Account ID
+        adminRoleArn:
+          title: Admin Role ARN
+          type: string
+          description: ARN of the administrator IAM role
+          default: "arn:aws:iam::XXXXXXXXXXXX:role/Admin"
+        action:
+          title: Action
+          type: string
+          description: Action to perform (deploy/destroy)
+          enum:
+            - deploy
+            - destroy
+          default: "deploy"
+    - title: Choose a Repo location
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+    - title: AWS Configuration
+      required:
+        - region
+        - awsAccessKeyId
+        - awsSecretAccessKey
+        - awsSessionToken
+      properties:
+        region:
+          title: AWS Region
+          type: string
+          description: The AWS region for deployment
+          default: "us-east-1"
+          enum:
+            - us-east-1
+            - us-east-2
+            - us-west-1
+            - us-west-2
+        awsAccessKeyId:
+          title: AWS Access Key ID
+          type: string
+          description: AWS Access Key ID
+          ui:widget: password
+        awsSecretAccessKey:
+          title: AWS Secret Access Key
+          type: string
+          description: AWS Secret Access Key
+          ui:widget: password
+        awsSessionToken:
+          title: AWS Session Token
+          type: string
+          description: AWS Session Token (required for temporary credentials)
+          ui:widget: password
+
+  steps:
+    - id: fetch-template
+      name: Fetch Template
+      action: fetch:template
+      input:
+        url: ./content
+        values:
+          name: ${{ parameters.name }}
+    # This step publishes the contents of the working directory to GitHub.
+    - id: publish
+      name: Publish
+      action: publish:github
+      input:
+        allowedHosts: ['github.com']
+        description: This is ${{ parameters.name }}
+        repoUrl: ${{ parameters.repoUrl }}
+    # Start a GitHub Action to build an EKS cluster with Terraform
+    - id: github-action
+      name: Trigger GitHub Action
+      action: github:actions:dispatch
+      input:
+        workflowId: .github/workflows/sagemaker-service-catalog.yml
+        repoUrl: github.com?repo=aiops-modules&owner=aiops-idp-backstage
+        branchOrTagName: 'main'
+        workflowInputs:
+          deploymentName: ${{ parameters.name }}
+          awsRegion: ${{ parameters.region }}
+          action: ${{ parameters.action }}
+          awsAccountId: ${{ parameters.awsAccountId }}
+          adminRoleArn: ${{ parameters.adminRoleArn }}
+          awsAccessKeyId: ${{ parameters.awsAccessKeyId }}
+          awsSecretAccessKey: ${{ parameters.awsSecretAccessKey }}
+          awsSessionToken: ${{ parameters.awsSessionToken }}
+
+    # The final step is to register our new component in the catalog.
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+
+  # Outputs are displayed to the user after a successful execution of the template.
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps['publish'].output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps['register'].output.entityRef }}

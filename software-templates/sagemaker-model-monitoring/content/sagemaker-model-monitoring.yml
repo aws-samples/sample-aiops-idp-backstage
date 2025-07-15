@@ -1,0 +1,134 @@
+#This file will be present in .github/workflow inside aiops-modules repo
+name: Deploy SageMaker model monitoring
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploymentName:
+        description: 'Name of the deployment'
+        required: true
+        default: 'aiops'
+      awsRegion:
+        description: 'AWS Region for deployment'
+        required: true
+        default: 'us-east-1'
+      action:
+        description: 'Action to perform (deploy/destroy)'
+        required: true
+        type: choice
+        options:
+          - deploy
+          - destroy
+      awsAccountId:
+        description: 'AWS Account ID'
+        required: true
+      adminRoleArn:
+        description: 'Admin Role ARN'
+        required: true
+      awsAccessKeyId:
+        description: 'AWS Access Key ID'
+        required: true
+      awsSecretAccessKey:
+        description: 'AWS Secret Access Key'
+        required: true
+      awsSessionToken:
+        description: 'AWS Session Token'
+        required: true
+
+jobs:
+  deploy_sagemaker_templates:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.action == 'deploy' }}
+    steps:
+    - name: Clone AIOps Modules Repository
+      run: |
+        git clone --origin upstream --branch main https://github.com/aiops-idp-backstage/aiops-modules.git
+        cd aiops-modules
+    
+    - name: Setup Python Environment
+      run: |
+        cd aiops-modules
+        python3 -m venv .venv && source .venv/bin/activate
+        pip install --upgrade pip setuptools wheel
+        pip install -r ./requirements.txt
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+    
+    - name: Install CDK CLI
+      run: |
+        npm install -g aws-cdk
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ github.event.inputs.awsAccessKeyId }}
+        aws-secret-access-key: ${{ github.event.inputs.awsSecretAccessKey }}
+        aws-session-token: ${{ github.event.inputs.awsSessionToken }}
+        aws-region: ${{ github.event.inputs.awsRegion }}
+    
+    - name: Set Environment Variables
+      run: |
+        cd aiops-modules
+        echo "PRIMARY_ACCOUNT=${{ github.event.inputs.awsAccountId }}" >> $GITHUB_ENV
+        echo "ADMIN_ROLE_ARN=${{ github.event.inputs.adminRoleArn }}" >> $GITHUB_ENV
+    
+    - name: Bootstrap CDK Environment
+      run: |
+        cd aiops-modules
+        source .venv/bin/activate
+        npx cdk bootstrap aws://${{ github.event.inputs.awsAccountId }}/${{ github.event.inputs.awsRegion }}
+    
+    - name: Bootstrap AWS Account for SeedFarmer
+      run: |
+        cd aiops-modules
+        source .venv/bin/activate
+        seedfarmer bootstrap toolchain --project ${{ github.event.inputs.deploymentName }} --trusted-principal ${{ github.event.inputs.adminRoleArn }} --as-target
+    
+    - name: Deploy Using SeedFarmer
+      run: |
+        cd aiops-modules
+        export PRIMARY_REGION=eu-east-1
+        source .venv/bin/activate
+        seedfarmer apply manifests/mlops-sagemaker/sagemaker-model-monitoring-deployment.yaml
+
+  destroy_sagemaker_templates:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.action == 'destroy' }}
+    steps:
+    - name: Clone AIOps Modules Repository
+      run: |
+        git clone --origin upstream --branch release/1.8.0 https://github.com/awslabs/aiops-modules
+        cd aiops-modules
+    
+    - name: Setup Python Environment
+      run: |
+        cd aiops-modules
+        python3 -m venv .venv && source .venv/bin/activate
+        pip install --upgrade pip setuptools wheel
+        pip install -r ./requirements.txt
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+    
+    - name: Install CDK CLI
+      run: |
+        npm install -g aws-cdk
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ github.event.inputs.awsAccessKeyId }}
+        aws-secret-access-key: ${{ github.event.inputs.awsSecretAccessKey }}
+        aws-session-token: ${{ github.event.inputs.awsSessionToken }}
+        aws-region: ${{ github.event.inputs.awsRegion }}
+    
+    - name: Destroy Using SeedFarmer
+      run: |
+        cd aiops-modules
+        source .venv/bin/activate
+        seedfarmer destroy ${{ github.event.inputs.deploymentName }}

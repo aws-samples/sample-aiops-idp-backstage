@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name | dump }}
+  annotations:
+    github.com/project-slug: aiops-idp-backstage/aiops-modules/modules/sagemaker/sagemaker-model-package-group
+  description: ${{ values.name }} model package group running on AWS sagemaker
+spec:
+  type: service
+  owner: user:guest
+  lifecycle: experimental
