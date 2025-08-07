@@ -129,3 +129,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [AIOps Modules](https://github.com/awslabs/aiops-modules) - Infrastructure modules
 - [SeedFarmer](https://github.com/awslabs/seed-farmer) - Deployment orchestration
 - [Backstage](https://backstage.io/) - Developer portal platform
+
+## Contributors
+* Ashish Bhatt
+* Shashank Hirematt
+* Shivanshu Suryakar
