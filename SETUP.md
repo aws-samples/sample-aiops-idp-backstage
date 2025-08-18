@@ -39,7 +39,7 @@ npx cdk deploy BackstagePlatform --require-approval never
 
 -> Verify accessing Backstage using ALB endpoint:
 
-![alt text](image.png)
+![alt text](images/image.png)
 
 
 3. Setting up SageMaker template files using script:
@@ -65,10 +65,10 @@ Our implementation strategy focuses on integrating AIOps modules specifically Am
 
 -- Click on Create and Register existing component
 -- Add the location of the catalog-info file.
-![alt text](image-1.png)
+![alt text](images/image-1.png)
 -- Review and finish.
 -- Verify all the AIOPS SageMaker templates are added into your backstage instance.
-![alt text](image-2.png)
+![alt text](images/image-2.png)
 
 
 6. Use of Registered Amazon SageMaker templates:
@@ -87,39 +87,39 @@ Step2: Fill in Basic Information:
  — Enter the Admin Role ARN with sufficient permissions
  — Select "deploy" as the action
 
-![alt text](image-3.png)
+![alt text](images/image-3.png)
 
 Step3: Select Repository Location
  — Choose where the template code will be stored
  — Select an existing GitHub repository or create a new one
  — This repository will store the configuration and workflow files
 
-![alt text](image-4.png)
+![alt text](images/image-4.png)
 
 Step4: Configure AWS Settings
  — Select the AWS region for deployment (e.g., "us-east-1")
  — Enter your AWS Access Key ID, Secret Access Key, and Session Token
  — These credentials must have permissions to create SageMaker resources
 
-![alt text](image-5.png)
+![alt text](images/image-5.png)
 
 Step5: Review and Create
  — Verify all entered information
  — Click "Create" to initiate the template generation process
 
-![alt text](image-6.png)
+![alt text](images/image-6.png)
 
 Step6: Monitor Deployment Progress: 
   Backstage will create a new repository with the necessary files, A GitHub Actions workflow will be automatically triggered, The workflow will use SeedFarmer to deploy SageMaker Studio
 
-![alt text](image-7.png)
+![alt text](images/image-7.png)
 
 Step7: Access Deployment Details: Once complete, Backstage will display links to:
  — The created GitHub repository
  — The component in the Backstage catalog
  — The GitHub Actions workflow logs
 
-![alt text](image-8.png)
+![alt text](images/image-8.png)
 
 Step8: Verification of the resources created by accessing SageMaker Studio
  — Navigate to the AWS Console
@@ -127,7 +127,7 @@ Step8: Verification of the resources created by accessing SageMaker Studio
  — Find the newly created SageMaker Studio domain and user profile
  — Click on launch studio and begin using the ML environment
 
-![alt text](image-9.png)
+![alt text](images/image-9.png)
 
 Step9: Manage the Deployment:
  - To make changes, update the configuration in the GitHub repository
