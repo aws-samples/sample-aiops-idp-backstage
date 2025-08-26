@@ -2,12 +2,19 @@
 
 ## Prerequisites
 
-- An AWS account with necessary permissions (IAM, EKS, RDS, ALB)
+- An AWS account with the below permissions:
+  - **IAM**: CreateRole, AttachRolePolicy, CreatePolicy, PassRole
+  - **EKS**: CreateCluster, DescribeCluster, CreateNodegroup, TagResource
+  - **RDS**: CreateDBInstance, CreateDBSubnetGroup, DescribeDBInstances
+  - **EC2**: CreateVpc, CreateSubnet, CreateSecurityGroup, CreateInternetGateway
+  - **ELB**: CreateLoadBalancer, CreateTargetGroup, CreateListener
+  - **CloudFormation**: CreateStack, UpdateStack, DescribeStacks (for CDK)
+  - **S3**: CreateBucket, PutObject, GetObject (for CDK bootstrap)
+  - **STS**: AssumeRole, GetCallerIdentity
 - AWS CLI and Github CLI installed and configured
 - Node.js 16.x or later installed
 - Docker installed (for local development)
 - kubectl installed for EKS cluster management
-- Sufficient AWS service quotas for EKS, RDS, and ALB resources
 
 ## Backstage Deployment
 
